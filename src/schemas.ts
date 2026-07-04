@@ -56,15 +56,17 @@ export const AuthorizeMarketTradeSchema = z
       .positive("Max order size must be positive")
       .describe("Maximum USDC amount per single order."),
     allowed_sides: z
-      .array(z.nativeEnum(Side))
-      .min(1, "At least one side must be allowed")
-      .default([Side.BUY, Side.SELL])
-      .describe("Which sides the authorization permits."),
+      .string()
+      .default("BUY,SELL")
+      .describe(
+        "Comma-separated sides: 'BUY,SELL' for both, 'BUY' for buy only, 'SELL' for sell only."
+      ),
     allowed_order_types: z
-      .array(z.nativeEnum(OrderType))
-      .min(1, "At least one order type must be allowed")
-      .default([OrderType.GTC, OrderType.FOK])
-      .describe("Order types permitted under this authorization."),
+      .string()
+      .default("GTC,FOK")
+      .describe(
+        "Comma-separated order types: 'GTC,GTD,FOK,FAK'. Common combos: 'GTC,FOK' for limit+market, 'GTC' for limit only, 'FOK,FAK' for market only."
+      ),
     expires_in_hours: z
       .number()
       .int()
@@ -203,3 +205,13 @@ export const GetOrderHistorySchema = z
   .strict();
 
 export type GetOrderHistoryInput = z.infer<typeof GetOrderHistorySchema>;
+
+// ── Tool 7: dashboard ───────────────────────────────
+
+export const DashboardSchema = z
+  .object({
+    response_format: responseFormat,
+  })
+  .strict();
+
+export type DashboardInput = z.infer<typeof DashboardSchema>;

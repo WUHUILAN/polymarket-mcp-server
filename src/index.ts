@@ -16,6 +16,7 @@ import { AuthService } from "./services/auth-service.js";
 import { OrderService } from "./services/order-service.js";
 import { registerAuthorizationTools } from "./tools/authorization-tools.js";
 import { registerOrderTools } from "./tools/order-tools.js";
+import { registerDashboardTool, registerAuthorizationResources } from "./tools/dashboard-tool.js";
 
 // ── Bootstrap ───────────────────────────────────────
 
@@ -30,6 +31,8 @@ const server = new McpServer({
 
 registerAuthorizationTools(server, authService);
 registerOrderTools(server, orderService);
+registerDashboardTool(server, authService, store);
+registerAuthorizationResources(server, authService, store);
 
 // ── Transport ───────────────────────────────────────
 

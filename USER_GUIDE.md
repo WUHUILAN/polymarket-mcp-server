@@ -208,8 +208,8 @@ Transport: stdio
 | `market_slug` | string | ✅ | — | 市场标识，如 `"btc-100k-2024"`。用 `"*"` 表示授权所有市场 |
 | `spending_limit` | number | ✅ | — | 总花费上限（USDC），如 `500` |
 | `max_order_size` | number | ✅ | — | 单笔订单最大金额，如 `100` |
-| `allowed_sides` | array | 否 | `["BUY","SELL"]` | 允许的方向 |
-| `allowed_order_types` | array | 否 | `["GTC","FOK"]` | 允许的订单类型 |
+| `allowed_sides` | string | 否 | `"BUY,SELL"` | 逗号分隔：`"BUY"`, `"SELL"`, `"BUY,SELL"` |
+| `allowed_order_types` | string | 否 | `"GTC,FOK"` | 逗号分隔：`"GTC,GTD,FOK,FAK"` |
 | `expires_in_hours` | number | 否 | `24` | 有效期（小时），最大 720（30天） |
 | `response_format` | enum | 否 | `"json"` | 输出格式：`"json"` 或 `"markdown"` |
 
@@ -230,8 +230,8 @@ Transport: stdio
   "market_slug": "*",
   "spending_limit": 2000,
   "max_order_size": 200,
-  "allowed_sides": ["BUY"],
-  "allowed_order_types": ["GTC", "FOK", "FAK"],
+  "allowed_sides": "BUY",
+  "allowed_order_types": "GTC,FOK,FAK",
   "expires_in_hours": 48
 }
 ```
@@ -252,7 +252,7 @@ Transport: stdio
     "spending_limit": 500,
     "max_order_size": 100,
     "allowed_sides": ["BUY", "SELL"],
-    "allowed_order_types": ["GTC", "FOK"]
+    "allowed_order_types": "GTC,FOK"
   },
   "spending_summary": {
     "total_spent": 0,
@@ -692,7 +692,7 @@ Step 6: revoke_authorization ──→ 作废授权
 ```
 Step 1: authorize_market_trade
          { "market_slug": "fed-rate-cut-2025", "spending_limit": 500, "max_order_size": 200,
-           "allowed_order_types": ["FOK", "FAK"] }
+           "allowed_order_types": "FOK,FAK" }
 
 Step 2: place_order (FOK) ──→ 大概率 FILLED（流动性充足）
          { "authorization_id": "xxx", "market_slug": "fed-rate-cut-2025",

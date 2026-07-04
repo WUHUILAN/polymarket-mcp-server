@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { AuthService } from "../services/auth-service.js";
 import { AppError, formatSuccess } from "../errors.js";
+import { Side, OrderType } from "../types.js";
 import {
   AuthorizeMarketTradeSchema,
   RevokeAuthorizationSchema,
@@ -25,8 +26,8 @@ Args:
   - market_slug (string): Polymarket market slug or "*" for all markets
   - spending_limit (number): Max total USDC exposure (e.g., 500 = 500 USDC)
   - max_order_size (number): Max USDC per single order
-  - allowed_sides (array): ["BUY"] or ["BUY","SELL"]. Default both.
-  - allowed_order_types (array): ["GTC","FOK","FAK","GTD"]. Default ["GTC","FOK"].
+  - allowed_sides (string): Comma-separated. 'BUY,SELL' for both, 'BUY' for buy only, 'SELL' for sell only. Default 'BUY,SELL'.
+  - allowed_order_types (string): Comma-separated. 'GTC,GTD,FOK,FAK'. Common: 'GTC,FOK' (limit+market), 'GTC' (limit only), 'FOK,FAK' (market only). Default 'GTC,FOK'.
   - expires_in_hours (number): Auth validity. Default 24, max 720.
   - response_format ("json" | "markdown"): Output format.
 
@@ -54,12 +55,23 @@ Error Handling:
     },
     async (params) => {
       try {
+        const allowedSides = parseEnumList(
+          params.allowed_sides,
+          Side,
+          "allowed_sides"
+        );
+        const allowedOrderTypes = parseEnumList(
+          params.allowed_order_types,
+          OrderType,
+          "allowed_order_types"
+        );
+
         const result = authService.authorize({
           marketSlug: params.market_slug,
           spendingLimit: params.spending_limit,
           maxOrderSize: params.max_order_size,
-          allowedSides: params.allowed_sides,
-          allowedOrderTypes: params.allowed_order_types,
+          allowedSides,
+          allowedOrderTypes,
           expiresInHours: params.expires_in_hours,
         });
 
@@ -194,6 +206,40 @@ Returns:
       }
     }
   );
+}
+
+// ── Helpers ──────────────────────────────────────────
+
+function parseEnumList<T extends string>(
+  raw: string,
+  enumType: Record<string, T>,
+  fieldName: string
+): T[] {
+  const parts = raw
+    .split(",")
+    .map((s) => s.trim().toUpperCase())
+    .filter((s) => s.length > 0);
+
+  if (parts.length === 0) {
+    throw new AppError(
+      "INVALID_INPUT",
+      `Field '${fieldName}' is empty.`,
+      `Provide at least one value, e.g., 'BUY,SELL'.`
+    );
+  }
+
+  const validValues = Object.values(enumType) as T[];
+  for (const part of parts) {
+    if (!validValues.includes(part as T)) {
+      throw new AppError(
+        "INVALID_INPUT",
+        `Invalid value '${part}' in '${fieldName}'.`,
+        `Valid values: ${validValues.join(", ")}.`
+      );
+    }
+  }
+
+  return parts as T[];
 }
 
 // ── Shared Error Handler ────────────────────────────
